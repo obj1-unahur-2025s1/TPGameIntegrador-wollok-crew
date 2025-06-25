@@ -1,0 +1,19 @@
+import wollok.game.*
+import paquetes.*
+import clientes.*
+import repartidor.*
+import menu.*
+
+
+program JuegoRepartidor {
+    game.title("Juego del Repartidor")
+    game.width(25)
+    game.height(25)
+    game.cellSize(50)
+    menuInicial.mostrarMenu()
+
+    keyboard.num1().onPressDo({ menuInicial.iniciarNivel1() })
+    keyboard.num2().onPressDo({ menuInicial.iniciarNivel2() })
+
+    game.start()
+}
