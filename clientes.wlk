@@ -76,4 +76,8 @@ object listaClientes{
         game.removeVisual(bur)
         burbujas.remove(bur)
     }
+
+    method vaciarClientes() {
+        totalClientes.forEach({c=>self.sacarCliente(c)})
+    }
 }

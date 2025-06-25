@@ -29,8 +29,16 @@ object menuInicial {
         game.boardGround("mapa22.png")
         game.addVisual(initImagen)
         
-        keyboard.num1().onPressDo({ self.iniciarNivel1() })
-        keyboard.num2().onPressDo({ self.iniciarNivel2() })
+    keyboard.num1().onPressDo({ 
+        game.sound("level2.mp3").play()
+        game.sound("backsound60ss.mp3").play()
+        self.iniciarNivel1() 
+    })
+    keyboard.num2().onPressDo({ 
+        game.sound("level2.mp3").play()
+        game.sound("backsound45s.mp3").play()
+        self.iniciarNivel2() 
+    })
     }
 
     method iniciarNivel1() {
@@ -54,7 +62,7 @@ object menuInicial {
         controles.iniciar()
         listaBarreras.crearBarreras()
 
-        game.onTick(3500, "crear cliente", {listaClientes.crearCliente()})
+        game.onTick(1800, "crear cliente", {listaClientes.crearCliente()})
     }
 
     method terminarNivel() {
@@ -65,6 +73,8 @@ object menuInicial {
             game.addVisual(menuPerder)
             game.sound("gameover.mp3").play()
         }
+        game.removeTickEvent("crear cliente")
+        listaClientes.vaciarClientes()
         controles.parar()
     }
 }
