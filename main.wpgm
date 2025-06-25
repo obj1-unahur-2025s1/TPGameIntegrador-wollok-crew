@@ -12,8 +12,16 @@ program JuegoRepartidor {
     game.cellSize(50)
     menuInicial.mostrarMenu()
 
-    keyboard.num1().onPressDo({ menuInicial.iniciarNivel1() })
-    keyboard.num2().onPressDo({ menuInicial.iniciarNivel2() })
+    keyboard.num1().onPressDo({ 
+        game.sound("level2.mp3").play()
+        game.sound("backsound60ss.mp3").play()
+        menuInicial.iniciarNivel1() 
+    })
+    keyboard.num2().onPressDo({ 
+        game.sound("level2.mp3").play()
+        game.sound("backsound45s.mp3").play()
+        menuInicial.iniciarNivel2() 
+    })
 
     game.start()
 }

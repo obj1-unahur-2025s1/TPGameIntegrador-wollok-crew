@@ -32,37 +32,45 @@ object repartidor {
         if (!self.hayBarreraDerecha()) position = position.right(1)
         image = "Repa01.png"
         hitbox = self.hitbox3x3()
+        game.sound("motosound.mp3").play()
     }
 
     method moverIzquierda() {
         if (!self.hayBarreraIzquierda()) position = position.left(1)
         image = "Repa02.png"
         hitbox = self.hitbox3x3()
+        game.sound("motosound.mp3").play()
     }
 
     method moverArriba() {
         if (!self.hayBarreraArriba()) position = position.up(1)
         image = "Repa03.png"
         hitbox = self.hitbox2x3()
+        game.sound("motosound.mp3").play()
     }
 
     method moverAbajo() {
         if (!self.hayBarreraAbajo()) position = position.down(1)
         image = "Repa04.png"
         hitbox = self.hitbox2x3()
+        game.sound("motosound.mp3").play()
     }
 
     method agarrarPaquete() {
         if (paqueteAgarrado == null && self.paqueteEnEsteEspacio() != null){
             paqueteAgarrado = self.paqueteEnEsteEspacio()
-            listaPaquetes.sacarPaquete(self.paqueteEnEsteEspacio())}
+            listaPaquetes.sacarPaquete(self.paqueteEnEsteEspacio())
+            game.sound("blip2.mp3").play()
+        }
     }
 
     method entregarPaquete() {
         if (paqueteAgarrado != null && self.clienteEnEsteEspacio() != null && (self.clienteEnEsteEspacio().idPaqueteElegido() == paqueteAgarrado.idPaquete())){
             listaClientes.sacarCliente(self.clienteEnEsteEspacio())
             paquetesEntregados += 1
-            paqueteAgarrado = null}
+            game.sound("drop3.mp3").play()
+            paqueteAgarrado = null
+        }
     }
 
     method paquetesEntregados() = paquetesEntregados

@@ -58,11 +58,12 @@ object menuInicial {
     }
 
     method terminarNivel() {
-        if (repartidor.paquetesEntregados() >= 8){
+        if (repartidor.paquetesEntregados() >= 8) {
             game.addVisual(menuGanar)
-        } 
-        else {
+            game.sound("victory.mp3").play()
+        } else {
             game.addVisual(menuPerder)
+            game.sound("gameover.mp3").play()
         }
         controles.parar()
     }
