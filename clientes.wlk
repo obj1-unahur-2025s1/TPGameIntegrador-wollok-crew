@@ -2,31 +2,43 @@ import wollok.game.*
 import paquetes.*
 
 class Cliente inherits EntidadVisual{
-    const idPaqueteElegido = [0, 1, 2, 3].anyOne()
-    const imagen = ["Cliente01.png", "Cliente02.png", "Cliente03.png", "Cliente04.png"].anyOne()
+    var paqueteElegido = listaPaquetes.paquetesDisponibles().anyOne()
+    var imagen = ["Cliente01.png", "Cliente02.png", "Cliente03.png", "Cliente04.png"].anyOne()
+    var burbuja = paqueteElegido.burbuja()
     override method image() = imagen
-    method idPaqueteElegido() = idPaqueteElegido
+    method paqueteElegido() = paqueteElegido
+    method elegirPaquete(paquete) {paqueteElegido = paquete}
+
+    method actualizarPosicion() {
+        position = randomizadorClientesPos.posicionAleatoriaCliente()
+        imagen = ["Cliente01.png", "Cliente02.png", "Cliente03.png", "Cliente04.png"].anyOne()
+        self.elegirPaquete(listaPaquetes.paquetesDisponibles().anyOne())
+        burbuja = paqueteElegido.burbuja()
+        }
+    
+    override method burbuja() = burbuja
 }
-
-
 
 class BurbujaCliente {
     const cliente
     method cliente() = cliente
-    const position = cliente.position().up(2).right(1)
-    const imagen = ["burbujaBebida.png","burComida.png","burbujaMedicina.png","burbujaRopa.png"].get(cliente.idPaqueteElegido())
-
+    var position = cliente.position().up(2).right(1)
+    var imagen = cliente.burbuja()
+    
     method image() = imagen
     method position() = position
+    method actualizarPosicion() {
+        position = cliente.position().up(2).right(1)
+        imagen = cliente.burbuja()}
 
 }
 
 
 object randomizadorClientesPos {
     const todasLasPosiciones = [
-        [2, 2], [4, 2], [6, 2], [15, 2], [17, 2], [19, 2], [21, 2],
-        [15, 7], [17, 7], [19, 7], [21, 7], [2, 7], [4, 7], [6, 7],
-        [2, 18], [4, 18], [6, 18], [15, 18], [17, 18], [19, 18], [21, 18]
+        game.at(2,2), game.at(4,2), game.at(6,2), game.at(15,2), game.at(17,2), game.at(19,2), game.at(21,2),
+        game.at(15,7), game.at(17,7), game.at(19,7), game.at(21,7), game.at(2,7), game.at(4,7), game.at(6,7),
+        game.at(2,18), game.at(4,18), game.at(6,18), game.at(15,18), game.at(17,18), game.at(19,18), game.at(21,18)
     ]
     var posicionesDisponibles = todasLasPosiciones.copy()
 
@@ -40,44 +52,56 @@ object randomizadorClientesPos {
     }
 
     method liberarPosicion(pos) {
-        const posLista = [pos.x(), pos.y()]
-        if (!posicionesDisponibles.contains(posLista)) {
-            posicionesDisponibles.add(posLista)
+        if (!posicionesDisponibles.contains(pos)) {
+            posicionesDisponibles.add(pos)
         }
     }
 }
 
 
 object listaClientes{
-    const totalClientes = []
-    const burbujas = []
+    const cli1 = new Cliente(position = randomizadorClientesPos.posicionAleatoriaCliente())
+    const cli2 = new Cliente(position = randomizadorClientesPos.posicionAleatoriaCliente())
+    const cli3 = new Cliente(position = randomizadorClientesPos.posicionAleatoriaCliente())
+    const cli4 = new Cliente(position = randomizadorClientesPos.posicionAleatoriaCliente())
 
-    method totalClientes() = totalClientes
+    const bur1 = new BurbujaCliente(cliente = cli1)
+    const bur2 = new BurbujaCliente(cliente = cli2)
+    const bur3 = new BurbujaCliente(cliente = cli3)
+    const bur4 = new BurbujaCliente(cliente = cli4)
 
-    method posiciones() = totalClientes.map({o=>o.position()})
+    const clientesDisponibles = [cli1,cli2,cli3,cli4]
+    const clientesActuales = []
+
+    const burbujasDisponibles = [bur1,bur2,bur3,bur4]
+
+    method clientesActuales() = clientesActuales
+
+    method posiciones() = clientesActuales.map({o=>o.position()})
 
     method crearCliente() {
-        if (totalClientes.size() < 4){
-            const pos = randomizadorClientesPos.posicionAleatoriaCliente()
-            const cliente = new Cliente(position = game.at(pos.get(0),pos.get(1)))
-            const burbuja = new BurbujaCliente(cliente = cliente)
-            totalClientes.add(cliente)
-            burbujas.add(burbuja)
-            listaPaquetes.crearPaquete(cliente.idPaqueteElegido())
+        if (clientesActuales.size() < 4){
+            const cliente = clientesDisponibles.anyOne()
+            clientesActuales.add(cliente)
+            clientesDisponibles.remove(cliente)
+            cliente.elegirPaquete(listaPaquetes.paquetesDisponibles().anyOne())
+            listaPaquetes.crearPaquete(cliente.paqueteElegido())
             game.addVisual(cliente)
-            game.addVisual(burbuja)
+            game.addVisual(burbujasDisponibles.find({b=>b.cliente() == cliente}))
         }
     }
 
     method sacarCliente(cliente) {
-        totalClientes.remove(cliente)
+        clientesActuales.remove(cliente)
+        clientesDisponibles.add(cliente)
         game.removeVisual(cliente)
-        const bur = burbujas.find({b=>b.cliente() == cliente})
-        game.removeVisual(bur)
-        burbujas.remove(bur)
+        game.removeVisual(burbujasDisponibles.find({b=>b.cliente() == cliente}))
+        randomizadorClientesPos.liberarPosicion(cliente.position())
+        cliente.actualizarPosicion()
+        burbujasDisponibles.find({b=>b.cliente() == cliente}).actualizarPosicion()
     }
 
     method vaciarClientes() {
-        totalClientes.forEach({c=>self.sacarCliente(c)})
+        clientesActuales.forEach({c=>self.sacarCliente(c)})
     }
 }
