@@ -1,36 +1,55 @@
 import menu.*
 import clientes.*
 import wollok.game.*
+
 class EntidadVisual{
     var property position
     method image()
-    method hitbox() = [self.position(), self.position().up(1), self.position().right(1), self.position().right(1).up(1)]
-    method burbuja()
+    method hitbox() = [self.position()]
 }
-class Paquete inherits EntidadVisual{
-    var id = [0,1,2,3].anyOne()
 
-    var imagen = ["Paq_Bebidas.png","Paq_Comida.png","Paq_Farmacia.png","Paq_Zapatos.png"].get(id)
-    var burbuja = ["burbujaBebida.png","burComida.png","burbujaMedicina.png","burbujaRopa.png"].get(id)
-    override method image() = imagen
-    override method burbuja() = burbuja
+class Paquete inherits EntidadVisual{
+    var tipoPaquete = [paqueteDeComida, paqueteBebida, paqueteFarmacia, paqueteRopa].anyOne()
+    var imagenDePaquete = tipoPaquete.image()
+    var burbujaDePaquete = tipoPaquete.burbuja()
+
+    override method image() = imagenDePaquete
+    method burbuja() = burbujaDePaquete
     
     method actualizarContenido() {
+        tipoPaquete = [paqueteDeComida, paqueteBebida, paqueteFarmacia, paqueteRopa].anyOne()
         position = randomizadorPaquete.posicionAleatoriaPaquete()
-        id = [0,1,2,3].anyOne()
-        imagen = ["Paq_Bebidas.png","Paq_Comida.png","Paq_Farmacia.png","Paq_Zapatos.png"].get(id)
-        burbuja = ["burbujaBebida.png","burComida.png","burbujaMedicina.png","burbujaRopa.png"].get(id)
-        }
+        imagenDePaquete = tipoPaquete.image()
+        burbujaDePaquete = tipoPaquete.burbuja()
+    }
+
+    method tipoPaquete() = tipoPaquete 
 }
 
+object paqueteDeComida {
+    method image() = "Paq_Comida50.png"
+    method burbuja() = "burComida2.png"
+}
+
+object paqueteBebida {
+    method image() = "Paq_Bebidas50.png"
+    method burbuja() = "burbujaBebida2.png"
+}
+
+object paqueteFarmacia {
+    method image() = "Paq_Farmacia50.png"
+    method burbuja() = "burbujaMedicina2.png"
+}
+
+object paqueteRopa {
+    method image() = "Paq_Zapatos50.png"
+    method burbuja() = "burbujaRopa2.png"
+}
 
 object randomizadorPaquete {
     const todasLasPosiciones = [
-        game.at(0,4), game.at(1,4), game.at(2,4), game.at(3,4), game.at(4,4), game.at(5,4), game.at(6,4),
-        game.at(0,16), game.at(1,16), game.at(2,16), game.at(3,16), game.at(4,16), game.at(5,16), game.at(6,16),
-        game.at(15,4), game.at(16,4), game.at(17,4), game.at(18,4), game.at(19,4), game.at(20,4), game.at(22,4), game.at(23,4),
-        game.at(15,16), game.at(16,16), game.at(17,16), game.at(18,16), game.at(19,16), game.at(20,16), game.at(21,16), game.at(22,16), game.at(23,16),
-        game.at(12,23), game.at(12,22), game.at(12,21), game.at(12,20), game.at(12,19) ,game.at(12,0) ,game.at(12,1), game.at(12,2)
+        game.at(2,0), game.at(4,0), game.at(6,0), game.at(6,2), game.at(6,4), game.at(6,6), game.at(6,8), game.at(8,0),
+        game.at(0,5), game.at(2,5), game.at(4,5), game.at(9,5)
     ]
     var posicionesDisponibles = todasLasPosiciones.copy()
 
@@ -56,24 +75,45 @@ object listaPaquetes{
     const paq3 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
     const paq4 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
 
-
     const paquetesActivos = []
-    const paquetesDisponibles = [paq1,paq2,paq3,paq4]
+    var paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
 
     method paquetesActivos() = paquetesActivos
-    method paquetesDisponibles() = paquetesDisponibles
+    method paquetesDisponibles() {
+        if (paquetesDisponibles1.isEmpty()) {
+            paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
+        }
+        return paquetesDisponibles1
+    } 
 
-    method posiciones() = paquetesDisponibles.map({o=>o.position()})
+    method posiciones() = paquetesDisponibles1.map({o=>o.position()})
 
     method crearPaquete(paquete) {
-        paquetesDisponibles.remove(paquete)
-        paquetesActivos.add(paquete)
-        game.addVisual(paquete)
+        if (!paquetesActivos.contains(paquete)) {
+            paquetesActivos.add(paquete)
+            game.addVisual(paquete)
+            paquetesDisponibles1.remove(paquete)
+        }
     }
 
     method sacarPaquete(paquete) {
-        paquetesDisponibles.add(paquete)
         paquetesActivos.remove(paquete)
         game.removeVisual(paquete)
     }
+
+    method reiniciar() {
+        paquetesActivos.clear()
+        paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
+        paquetesDisponibles1.forEach({p =>
+            game.removeVisual(p)  
+        })
+    }
+
+    method devolverPaquete(paquete) {
+        paquete.actualizarContenido()
+        paquetesDisponibles1.add(paquete)
+        self.crearPaquete(paquete)
+    }
+
+    method estaVacioDisponibles() = paquetesDisponibles1.isEmpty()
 }

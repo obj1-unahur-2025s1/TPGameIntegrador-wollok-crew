@@ -4,11 +4,10 @@ import clientes.*
 import repartidor.*
 import menu.*
 
-
 program JuegoRepartidor {
     game.title("Juego del Repartidor")
-    game.width(25)
-    game.height(25)
+    game.width(10)
+    game.height(10)
     game.cellSize(50)
     menuInicial.mostrarMenu()
     game.start()
