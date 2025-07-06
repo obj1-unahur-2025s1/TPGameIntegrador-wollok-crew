@@ -3,74 +3,90 @@ import paquetes.*
 import clientes.*
 import menu.*
 
+
 object repartidor {
-    var property position = game.at(0, 0)
-    var property image = "Repa0150.png"
+    var property position = game.at(10, 0)
+    var property image = "Repa01.png"
     var paqueteAgarrado = null
     var paquetesEntregados = 0
 
-    var hitbox = self.hitbox1x1()
+    const posiciones = []
 
-    method hitbox() = hitbox
+    method hitbox() = posiciones
 
-    method hitbox1x1() = [self.position()] 
+    method hitbox3x3() {
+        const x = self.position().x()
+        const y = self.position().y()
+        const variantesX = [0, 1, 2]
+        const varintesY = [0, 1, 2]
+        posiciones.clear()
 
-    method hitbox3x3() = 
-    [self.position(), self.position().up(1), self.position().up(2),
-     self.position().right(1), self.position().right(1).up(1), self.position().right(1).up(2),
-     self.position().right(2), self.position().right(2).up(1), self.position().right(2).up(2)]
+        variantesX.forEach({ vx =>
+            varintesY.forEach({ vy =>
+                posiciones.add(game.at(x + vx, y + vy))
+            })
+        })
+    }
 
-    method hitbox2x3() = 
-    [self.position(), self.position().up(1), self.position().up(2),
-     self.position().right(1), self.position().right(1).up(1), self.position().right(1).up(2)]
+
+    method hitbox2x3() {
+        const x = self.position().x()
+        const y = self.position().y()
+        const variantesX = [0, 1]
+        const varintesY = [0, 1, 2]
+        posiciones.clear()
+
+        variantesX.forEach({ vx =>
+            varintesY.forEach({ vy =>
+                posiciones.add(game.at(x + vx, y + vy))
+            })
+        })
+    }
 
     method moverDerecha() {
-        if (self.position().x() <= 8) position = position.right(1)
-        image = "Repa0150.png"
-        hitbox = self.hitbox1x1()
+        if (position.x() < 22) position = position.right(1)
+        image = "Repa01.png"
+        self.hitbox3x3()
         game.sound("motosound.mp3").play()
     }
 
     method moverIzquierda() {
-        if (self.position().x() > 0) position = position.left(1)
-        image = "Repa0250.png"
-        hitbox = self.hitbox1x1()
+        if (position.x() > 0) position = position.left(1)
+        image = "Repa02.png"
+        self.hitbox3x3()
         game.sound("motosound.mp3").play()
     }
 
     method moverArriba() {
-        if (self.position().y() <= 8) position = position.up(1)
-        image = "Repa0350.png"
-        hitbox = self.hitbox1x1()
+        if (position.y() < 21) position = position.up(1)
+        image = "Repa03.png"
+        self.hitbox2x3()
         game.sound("motosound.mp3").play()
     }
 
     method moverAbajo() {
-        if (self.position().y() > 0) position = position.down(1)
-        image = "Repa0450.png"
-        hitbox = self.hitbox1x1()
+        if (position.y() > 0) position = position.down(1)
+        image = "Repa04.png"
+        self.hitbox2x3()
         game.sound("motosound.mp3").play()
     }
 
+
     method agarrarPaquete() {
-        if (paqueteAgarrado == null) {
-            const paquete = self.paqueteEnEsteEspacio()
-            if (paquete != null) {
-                paqueteAgarrado = paquete
-                listaPaquetes.sacarPaquete(paquete)
-                game.sound("blip2.mp3").play()
-            }
+        if (paqueteAgarrado == null && self.paqueteEnEsteEspacio() != null){
+            paqueteAgarrado = self.paqueteEnEsteEspacio()
+            listaPaquetes.sacarPaquete(self.paqueteEnEsteEspacio())
+            game.sound("blip2.mp3").play()
         }
     }
 
     method entregarPaquete() {
-        if (paqueteAgarrado != null) {
+        if (paqueteAgarrado != null){
             const cliente = self.clienteEnEsteEspacio()
-            if (cliente != null && cliente.puedeRecibirElPaquete(paqueteAgarrado)) {
+            if (cliente != null && cliente.burbuja() == paqueteAgarrado.burbuja()){
                 cliente.recibirPaquete(paqueteAgarrado)
-                listaPaquetes.devolverPaquete(paqueteAgarrado)
-                paquetesEntregados += 1
                 game.sound("drop3.mp3").play()
+                paquetesEntregados += 1
                 paqueteAgarrado = null
             }
         }
@@ -78,9 +94,14 @@ object repartidor {
 
     method paquetesEntregados() = paquetesEntregados
 
-    method clienteEnEsteEspacio() = listaClientes.clientesActuales().findOrDefault({c=>c.hitbox().any({h=>self.hitbox().contains(h)})}, null)
+    method ObjetoEnEsteEspacioSiHay(objetos) =
+    objetos.findOrDefault({ o => o.hitbox().any({ h => self.hitbox().contains(h) }) }, null)
 
-    method paqueteEnEsteEspacio() = listaPaquetes.paquetesActivos().findOrDefault({p=>p.position() == self.position()}, null)
+    method clienteEnEsteEspacio() = self.ObjetoEnEsteEspacioSiHay(listaClientes.clientesActuales())
+
+    method paqueteEnEsteEspacio() = self.ObjetoEnEsteEspacioSiHay(listaPaquetes.paquetesActivos())
+
+
 }
 
 object timer {
@@ -92,21 +113,17 @@ object timer {
 
     method activar(tiempo) {
         numeroActual = tiempo
-        imagen = self.cambiarImagen(numeroActual)
+        imagen = (numeroActual.toString() + ".png")
         game.onTick(1000, "pasarTiempo", { self.disminuir() })
     }
 
     method disminuir() {
         if (numeroActual > 0) {
             numeroActual -= 1
-            imagen = self.cambiarImagen(numeroActual)
+            imagen = (numeroActual.toString() + ".png")
         } else {
             menuInicial.niveles().anyOne().terminar()
             game.removeTickEvent("pasarTiempo")
         }
-    }
-
-    method cambiarImagen(numero) {
-        return numero.toString() + ".png"
     }
 }

@@ -1,119 +1,92 @@
 import menu.*
 import clientes.*
 import wollok.game.*
-
 class EntidadVisual{
     var property position
     method image()
-    method hitbox() = [self.position()]
+    method hitbox() = [self.position(), self.position().up(1), self.position().right(1), self.position().right(1).up(1)]
+    method burbuja()
 }
-
 class Paquete inherits EntidadVisual{
-    var tipoPaquete = [paqueteDeComida, paqueteBebida, paqueteFarmacia, paqueteRopa].anyOne()
-    var imagenDePaquete = tipoPaquete.image()
-    var burbujaDePaquete = tipoPaquete.burbuja()
+    var id = [0,1,2,3].anyOne()
 
-    override method image() = imagenDePaquete
-    method burbuja() = burbujaDePaquete
+    var imagen = ["Paq_Bebidas.png","Paq_Comida.png","Paq_Farmacia.png","Paq_Zapatos.png"].get(id)
+    var burbuja = ["burbujaBebida.png","burComida.png","burbujaMedicina.png","burbujaRopa.png"].get(id)
+    override method image() = imagen
+    override method burbuja() = burbuja
     
     method actualizarContenido() {
-        tipoPaquete = [paqueteDeComida, paqueteBebida, paqueteFarmacia, paqueteRopa].anyOne()
-        position = randomizadorPaquete.posicionAleatoriaPaquete()
-        imagenDePaquete = tipoPaquete.image()
-        burbujaDePaquete = tipoPaquete.burbuja()
-    }
-
-    method tipoPaquete() = tipoPaquete 
+        randomizadorPaquete.generarPosicionDisponible()
+        position = randomizadorPaquete.posicionDisponible()
+        id = [0,1,2,3].anyOne()
+        imagen = ["Paq_Bebidas.png","Paq_Comida.png","Paq_Farmacia.png","Paq_Zapatos.png"].get(id)
+        burbuja = ["burbujaBebida.png","burComida.png","burbujaMedicina.png","burbujaRopa.png"].get(id)
+        }
 }
 
-object paqueteDeComida {
-    method image() = "Paq_Comida50.png"
-    method burbuja() = "burComida2.png"
-}
-
-object paqueteBebida {
-    method image() = "Paq_Bebidas50.png"
-    method burbuja() = "burbujaBebida2.png"
-}
-
-object paqueteFarmacia {
-    method image() = "Paq_Farmacia50.png"
-    method burbuja() = "burbujaMedicina2.png"
-}
-
-object paqueteRopa {
-    method image() = "Paq_Zapatos50.png"
-    method burbuja() = "burbujaRopa2.png"
-}
 
 object randomizadorPaquete {
-    const todasLasPosiciones = [
-        game.at(2,0), game.at(4,0), game.at(6,0), game.at(6,2), game.at(6,4), game.at(6,6), game.at(6,8), game.at(8,0),
-        game.at(0,5), game.at(2,5), game.at(4,5), game.at(9,5)
-    ]
-    var posicionesDisponibles = todasLasPosiciones.copy()
+    const posiciones = []
+    var posicionesDisponibles = posiciones.copy()
+    var posicionDisponible = null
 
-    method posicionAleatoriaPaquete() {
-        if (posicionesDisponibles.isEmpty()) {
-            posicionesDisponibles = todasLasPosiciones.copy()
-        }
-        const pos = posicionesDisponibles.anyOne()
-        posicionesDisponibles.remove(pos)
-        return pos
-    }
+    method posicionDisponible() = posicionDisponible
 
     method liberarPosicion(pos) {
         if (!posicionesDisponibles.contains(pos)) {
             posicionesDisponibles.add(pos)
         }
     }
+
+    method generarPosicionDisponible() {
+        if (posiciones.isEmpty()){
+            self.generarPosiciones()
+         }
+        if (posicionesDisponibles.isEmpty()) {
+            posicionesDisponibles = posiciones.copy()
+        }
+        posicionDisponible = posicionesDisponibles.anyOne()
+        posicionesDisponibles.remove(posicionDisponible)
+    } 
+
+    method generarPosiciones() {
+        // Bloque 1: fila (y = 4) y (y = 16), x = 0 a 6
+        (1..6).forEach({ x => posiciones.add(game.at(x, 4)) posiciones.add(game.at(x,16)) })
+
+         // Bloque 2 y 3: fila (y = 4) y (y = 16), x = 15 a 20 y 22 a 23
+        (16..20).forEach({ x => posiciones.add(game.at(x, 4)) posiciones.add(game.at(x, 16)) })
+        [22,23].forEach({ x => posiciones.add(game.at(x, 4)) posiciones.add(game.at(x, 16)) })
+
+        // Bloque 4 y 5: columna x = 12, y = 23 a 19 y también 0, 1, 2
+        (19..23).forEach({ y => posiciones.add(game.at(12, y)) })
+        (0..2).forEach({ y => posiciones.add(game.at(12, y)) })
+    } 
 }
 
 object listaPaquetes{
-    const paq1 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
-    const paq2 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
-    const paq3 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
-    const paq4 = new Paquete(position = randomizadorPaquete.posicionAleatoriaPaquete())
+    const paq1 = new Paquete(position = game.at(15,16))
+    const paq2 = new Paquete(position = game.at(0,4))
+    const paq3 = new Paquete(position = game.at(0,16))
+    const paq4 = new Paquete(position = game.at(15,4))
+
 
     const paquetesActivos = []
-    var paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
+    const paquetesDisponibles = [paq1,paq2,paq3,paq4]
 
     method paquetesActivos() = paquetesActivos
-    method paquetesDisponibles() {
-        if (paquetesDisponibles1.isEmpty()) {
-            paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
-        }
-        return paquetesDisponibles1
-    } 
+    method paquetesDisponibles() = paquetesDisponibles
 
-    method posiciones() = paquetesDisponibles1.map({o=>o.position()})
+    method posiciones() = paquetesDisponibles.map({o=>o.position()})
 
     method crearPaquete(paquete) {
-        if (!paquetesActivos.contains(paquete)) {
-            paquetesActivos.add(paquete)
-            game.addVisual(paquete)
-            paquetesDisponibles1.remove(paquete)
-        }
+        paquetesDisponibles.remove(paquete)
+        paquetesActivos.add(paquete)
+        game.addVisual(paquete)
     }
 
     method sacarPaquete(paquete) {
+        paquetesDisponibles.add(paquete)
         paquetesActivos.remove(paquete)
         game.removeVisual(paquete)
     }
-
-    method reiniciar() {
-        paquetesActivos.clear()
-        paquetesDisponibles1 = [paq1, paq2, paq3, paq4]
-        paquetesDisponibles1.forEach({p =>
-            game.removeVisual(p)  
-        })
-    }
-
-    method devolverPaquete(paquete) {
-        paquete.actualizarContenido()
-        paquetesDisponibles1.add(paquete)
-        self.crearPaquete(paquete)
-    }
-
-    method estaVacioDisponibles() = paquetesDisponibles1.isEmpty()
 }
